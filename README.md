@@ -1,2 +1,2 @@
-# sets
-Tracker of total sets made during workout. Gives stats and volume in dashboard.
+## Rhymes
+Taking a rhyming algorithm as far as I can, learning on the way.
