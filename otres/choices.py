@@ -1,6 +1,3 @@
-from email import message
-
-
 def one_rep_max():
     import pandas as pd
     import inquirer
