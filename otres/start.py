@@ -5,7 +5,7 @@ menu = inquirer.prompt(start)
 
 if menu['menu'] == 'Сколько поднять на раз':
     import choices
-    choices.orm()
+    choices.one_rep_max()
 elif menu['menu'] == 'Составить тренировку на группу мышц':
     import choices
-    
+    choices.programme()
