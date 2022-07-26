@@ -1,4 +1,4 @@
-def one_rm(weight, rep):
+def one_rm(weight, reps):
 
     def brzycki(w,r):
         return(w*(36/(37-r)))
@@ -7,8 +7,8 @@ def one_rm(weight, rep):
     def oconner(w,r):
         return(w*(1+(r/40)))
 
-    b = brzycki(weight, rep)
-    l = lombardi(weight, rep)
-    c = oconner(weight, rep)
+    b = brzycki(weight, reps)
+    l = lombardi(weight, reps)
+    c = oconner(weight, reps)
 
     return(max([b, l, c]))

@@ -1,3 +1,6 @@
+def round_to_multiple(number, multiple):
+    return multiple * round(number / multiple)
+
 def one_rep_max():
     import pandas as pd
     import inquirer
@@ -28,18 +31,41 @@ def programme():
     import inquirer
     db = pd.read_excel('db.xlsx')
 
+    # Задаём вопрос пользователю, даём опции
     question_cat = [
         inquirer.List('cat1', message='Какую категорию упражнений? ', choices=list(db['Категория'].unique())),
         inquirer.List('cat2', message='С чем совместить? ', choices=list(db['Категория'].unique()))
     ]
-
     print("Пожалуйста выберите две разных категории")
     category = inquirer.prompt(question_cat)
     print(f"Вы выбрали категории - {category['cat1']} и {category['cat2']}")
 
+    # Заставляем выбрать две разных категории
     if category['cat1'] == category['cat2']:
         print("Программе нужны разные категории, извините")
         programme()
     else:
-        print(list(db.loc[db['Категория'] == category['cat1']]['Упражнение']))
-        print(list(db.loc[db['Категория'] == category['cat2']]['Упражнение']))
+        pass
+
+    c1_ex = list(db.loc[db['Категория'] == category['cat1']]['Упражнение'])
+    c2_ex = list(db.loc[db['Категория'] == category['cat2']]['Упражнение'])
+    exercises = c1_ex + c2_ex
+    print(f'Количество упражнений: {len(exercises)}')
+
+    proga = pd.DataFrame(columns=['Упражнение', '1пх', '2пх', '3пх'])
+    for x in exercises:
+        df = db[db['Упражнение'] == x]
+        weight = int(df['Вес'].values)
+        reps = int(df['Повторения'].values)
+
+        import formula
+        orm = formula.one_rm(weight, reps)
+
+        weightlist = []
+        if 'гантел' in x:
+            weightlist.extend([x, round_to_multiple(orm*0.71, 2), round_to_multiple(orm*0.81, 2), round_to_multiple(orm*0.91, 2)])
+        else:
+            weightlist.extend([x, round(orm*0.71), round(orm*0.81), round(orm*0.91)])
+        proga = pd.concat([pd.DataFrame([weightlist], columns=['Упражнение', '1пх', '2пх', '3пх']), proga], ignore_index=True)
+    # proga.to_excel('proga.xlsx', index=False)
+    print(proga)
