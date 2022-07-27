@@ -1,3 +1,8 @@
+def delete_random_elems(list, n):
+    import random
+    to_delete = set(random.sample(range(len(list)), n))
+    return [x for i,x in enumerate(list) if not i in to_delete]
+
 def round_to_multiple(number, multiple):
     return multiple * round(number / multiple)
 
@@ -19,41 +24,59 @@ def one_rep_max():
     filter = db.loc[db['Упражнение'] == exercise['exercise']]
     weight = int(filter['Вес'])
     reps = int(filter['Повторения'])
-    print(f"Вы можете поднять {weight}кг на {reps} повторения")
+    print(f"Последний раз вы подняли {weight}кг на {reps} повторения")
 
     import formula
-    onerm = formula.one_rm(weight=weight, rep=reps)
+    onerm = formula.one_rm(weight=weight, reps=reps)
     print(f'Ваш максимум на одно повторение - {round(onerm,1)}')
     print(f'Ваш рабочий вес - {round(onerm*0.85, 1)}')
 
 def programme():
     import pandas as pd
     import inquirer
+    import re
     db = pd.read_excel('db.xlsx')
 
     # Задаём вопрос пользователю, даём опции
-    question_cat = [
-        inquirer.List('cat1', message='Какую категорию упражнений? ', choices=list(db['Категория'].unique())),
-        inquirer.List('cat2', message='С чем совместить? ', choices=list(db['Категория'].unique()))
+    print('Для построения программы пожалуйста ответьте на 4 вопроса:')
+    muscle_groups = [
+        inquirer.List('mg1', message='1. Какую группу мышц вы хотите тренировать? ', choices=list(db['Категория'].unique())),
+        inquirer.List('mg2', message='2. С чем совместить? ', choices=list(db['Категория'].unique())),
     ]
-    print("Пожалуйста выберите две разных категории")
-    category = inquirer.prompt(question_cat)
-    print(f"Вы выбрали категории - {category['cat1']} и {category['cat2']}")
+    print("Пожалуйста выберите две разных группы мышц")
+    category = inquirer.prompt(muscle_groups)
 
     # Заставляем выбрать две разных категории
-    if category['cat1'] == category['cat2']:
-        print("Программе нужны разные категории, извините")
+    if category['mg1'] == category['mg2']:
+        print("Программе нужны разные группы мышц, выберите пожалуйста разные группы")
         programme()
+        quit() # Без quit скрипт идёт до print(programme) и задаёт 3,4 вопросы снова
     else:
         pass
 
-    c1_ex = list(db.loc[db['Категория'] == category['cat1']]['Упражнение'])
-    c2_ex = list(db.loc[db['Категория'] == category['cat2']]['Упражнение'])
-    exercises = c1_ex + c2_ex
-    print(f'Количество упражнений: {len(exercises)}')
+    parameters = [
+        inquirer.Text('number', message='3. Сколько упражнений?', validate= lambda _, x: re.match('[0-9]', x)),
+        inquirer.Text('ratio', message='4. С каким соотношением?')
+    ]
+    params = inquirer.prompt(parameters)
+    print(f"Вы выбрали категории - {category['mg1']} и {category['mg2']} с соотношением {params['ratio']} ")
+    print(f"В тренировку войдёт {params['number']} упражнений")
+
+    list1 = list(db.loc[db['Категория'] == category['mg1']]['Упражнение'])
+    list2 = list(db.loc[db['Категория'] == category['mg2']]['Упражнение'])
+    total = list1 + list2
+    exercises=[list1, list2]
+
+    list1_num = round(params['number'] * params['ratio'])
+    list2_num = params['number'] - list1_num
+
+    if len(exercises[0]) != list1_num:
+        list1 = delete_random_elems(exercises[0], (len(exercises[0])-list1_num))
+    if len(exercises[1]) != list2_num:
+        list2 = delete_random_elems(exercises[1], (len(exercises[1])-list2_num))
 
     proga = pd.DataFrame(columns=['Упражнение', '1пх', '2пх', '3пх'])
-    for x in exercises:
+    for x in total:
         df = db[db['Упражнение'] == x]
         weight = int(df['Вес'].values)
         reps = int(df['Повторения'].values)
@@ -68,4 +91,5 @@ def programme():
             weightlist.extend([x, round(orm*0.71), round(orm*0.81), round(orm*0.91)])
         proga = pd.concat([pd.DataFrame([weightlist], columns=['Упражнение', '1пх', '2пх', '3пх']), proga], ignore_index=True)
     # proga.to_excel('proga.xlsx', index=False)
+    print("Ваша программа на тренировку: ")
     print(proga)
