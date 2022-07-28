@@ -6,6 +6,21 @@ def delete_random_elems(list, n):
 def round_to_multiple(number, multiple):
     return multiple * round(number / multiple)
 
+def one_rm(weight, reps):
+
+    def brzycki(w,r):
+        return(w*(36/(37-r)))
+    def lombardi(w,r):
+        return(w*(r**0.10))
+    def oconner(w,r):
+        return(w*(1+(r/40)))
+
+    b = brzycki(weight, reps)
+    l = lombardi(weight, reps)
+    c = oconner(weight, reps)
+
+    return(max([b, l, c]))
+
 def one_rep_max():
     import pandas as pd
     import inquirer
@@ -26,8 +41,7 @@ def one_rep_max():
     reps = int(filter['Повторения'])
     print(f"Последний раз вы подняли {weight}кг на {reps} повторения")
 
-    import formula
-    onerm = formula.one_rm(weight=weight, reps=reps)
+    onerm = one_rm(weight=weight, reps=reps)
     print(f'Ваш максимум на одно повторение - {round(onerm,1)}')
     print(f'Ваш рабочий вес - {round(onerm*0.85, 1)}')
 
@@ -39,15 +53,24 @@ def programme():
 
     # Задаём вопрос пользователю, даём опции
     print('Для построения программы пожалуйста ответьте на 4 вопроса:')
-    muscle_groups = [
-        inquirer.List('mg1', message='1. Какую группу мышц вы хотите тренировать? ', choices=list(db['Категория'].unique())),
-        inquirer.List('mg2', message='2. С чем совместить? ', choices=list(db['Категория'].unique())),
-    ]
+
+    legs_or_nah = [inquirer.List('mg1', message='1. Какую группу мышц вы хотите тренировать? ', choices=list(db['Категория'].unique()))]
+    legs = inquirer.prompt(legs_or_nah)
+    if legs['mg1'] == 'Ноги':
+        print('Ну вы зверюга...')
+        print('Ронни Коулмэна из себя возомнили?...')
+        import legs
+        # legs.legs()
+        quit()
+    else:
+        pass
+    
+    muscle_groups = [inquirer.List('mg2', message='2. С чем совместить? ', choices=list(db['Категория'].unique()))]
     print("Пожалуйста выберите две разных группы мышц")
     category = inquirer.prompt(muscle_groups)
 
     # Заставляем выбрать две разных категории
-    if category['mg1'] == category['mg2']:
+    if legs['mg1'] == category['mg2']:
         print("Программе нужны разные группы мышц, выберите пожалуйста разные группы")
         programme()
         quit() # Без quit скрипт идёт до print(programme) и задаёт 3,4 вопросы снова
@@ -55,25 +78,29 @@ def programme():
         pass
 
     parameters = [
-        inquirer.Text('number', message='3. Сколько упражнений?', validate= lambda _, x: re.match('[0-9]', x)),
-        inquirer.Text('ratio', message='4. С каким соотношением?')
+        inquirer.Text('number', message='3. Сколько упражнений?', validate= lambda _, x: re.match('[1-9]', x)),
+        inquirer.Text('ratio', message='4. С каким соотношением?', validate=lambda _, x: re.match('0+\.[1-9]', x))
     ]
     params = inquirer.prompt(parameters)
-    print(f"Вы выбрали категории - {category['mg1']} и {category['mg2']} с соотношением {params['ratio']} ")
-    print(f"В тренировку войдёт {params['number']} упражнений")
+    print(f"Вы выбрали категории - {legs['mg1']} и {category['mg2']} с соотношением {params['ratio']} ")
+    print(f"В тренировку войдёт {params['number']} упражнений:")
 
-    list1 = list(db.loc[db['Категория'] == category['mg1']]['Упражнение'])
+    list1 = list(db.loc[db['Категория'] == legs['mg1']]['Упражнение'])
     list2 = list(db.loc[db['Категория'] == category['mg2']]['Упражнение'])
-    total = list1 + list2
     exercises=[list1, list2]
+    number = int(float(params['number']))
+    ratio = float(params['ratio'])
 
-    list1_num = round(params['number'] * params['ratio'])
-    list2_num = params['number'] - list1_num
+    list1_num = round(number * ratio)
+    list2_num = number - list1_num
+    print(f"{list1_num} упражнения на {legs['mg1']}")
+    print(f"{list2_num} упражнения на {category['mg2']}")
 
     if len(exercises[0]) != list1_num:
         list1 = delete_random_elems(exercises[0], (len(exercises[0])-list1_num))
     if len(exercises[1]) != list2_num:
         list2 = delete_random_elems(exercises[1], (len(exercises[1])-list2_num))
+    total = list1 + list2
 
     proga = pd.DataFrame(columns=['Упражнение', '1пх', '2пх', '3пх'])
     for x in total:
@@ -81,8 +108,7 @@ def programme():
         weight = int(df['Вес'].values)
         reps = int(df['Повторения'].values)
 
-        import formula
-        orm = formula.one_rm(weight, reps)
+        orm = one_rm(weight, reps)
 
         weightlist = []
         if 'гантел' in x:
@@ -90,6 +116,7 @@ def programme():
         else:
             weightlist.extend([x, round(orm*0.71), round(orm*0.81), round(orm*0.91)])
         proga = pd.concat([pd.DataFrame([weightlist], columns=['Упражнение', '1пх', '2пх', '3пх']), proga], ignore_index=True)
+        proga = proga.sort_values(by=['1пх'], ascending=False)
     # proga.to_excel('proga.xlsx', index=False)
     print("Ваша программа на тренировку: ")
     print(proga)
