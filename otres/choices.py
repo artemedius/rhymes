@@ -6,7 +6,8 @@ def delete_random_elems(list, n):
 def round_to_multiple(number, multiple):
     return multiple * round(number / multiple)
 
-def one_rm(weight, reps):
+def formula(weight, reps):
+    from statistics import mean
 
     def brzycki(w,r):
         return(w*(36/(37-r)))
@@ -19,7 +20,7 @@ def one_rm(weight, reps):
     l = lombardi(weight, reps)
     c = oconner(weight, reps)
 
-    return(max([b, l, c]))
+    return(mean([b, l, c]))
 
 def one_rep_max():
     import pandas as pd
@@ -41,7 +42,7 @@ def one_rep_max():
     reps = int(filter['Повторения'])
     print(f"Последний раз вы подняли {weight}кг на {reps} повторения")
 
-    onerm = one_rm(weight=weight, reps=reps)
+    onerm = formula(weight=weight, reps=reps)
     print(f'Ваш максимум на одно повторение - {round(onerm,1)}')
     print(f'Ваш рабочий вес - {round(onerm*0.85, 1)}')
 
@@ -52,20 +53,23 @@ def programme():
     db = pd.read_excel('db.xlsx')
 
     # Задаём вопрос пользователю, даём опции
-    print('Для построения программы пожалуйста ответьте на 4 вопроса:')
+    print('Для построения программы пожалуйста ответьте на пару вопросов:')
 
-    legs_or_nah = [inquirer.List('mg1', message='1. Какую группу мышц вы хотите тренировать? ', choices=list(db['Категория'].unique()))]
+    legs_or_nah = [inquirer.List('mg1', message='1. Какую группу мышц Вы хотите тренировать? ', choices=list(db['Категория'].unique()))]
     legs = inquirer.prompt(legs_or_nah)
     if legs['mg1'] == 'Ноги':
         print('Ну вы зверюга...')
         print('Ронни Коулмэна из себя возомнили?...')
         import legs
-        # legs.legs()
+        legs.legs()
         quit()
     else:
         pass
     
-    muscle_groups = [inquirer.List('mg2', message='2. С чем совместить? ', choices=list(db['Категория'].unique()))]
+    cats = list(db['Категория'].unique())
+    cats.remove('Ноги')
+    cats.remove(legs['mg1'])
+    muscle_groups = [inquirer.List('mg2', message='2. С чем совместить? ', choices=cats)]
     print("Пожалуйста выберите две разных группы мышц")
     category = inquirer.prompt(muscle_groups)
 
@@ -82,7 +86,7 @@ def programme():
         inquirer.Text('ratio', message='4. С каким соотношением?', validate=lambda _, x: re.match('0+\.[1-9]', x))
     ]
     params = inquirer.prompt(parameters)
-    print(f"Вы выбрали категории - {legs['mg1']} и {category['mg2']} с соотношением {params['ratio']} ")
+    print(f"Вы выбрали группы мышц - {legs['mg1']} и {category['mg2']} с соотношением {params['ratio']} ")
     print(f"В тренировку войдёт {params['number']} упражнений:")
 
     list1 = list(db.loc[db['Категория'] == legs['mg1']]['Упражнение'])
@@ -108,7 +112,7 @@ def programme():
         weight = int(df['Вес'].values)
         reps = int(df['Повторения'].values)
 
-        orm = one_rm(weight, reps)
+        orm = formula(weight, reps)
 
         weightlist = []
         if 'гантел' in x:
