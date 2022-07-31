@@ -20,7 +20,11 @@ def legs():
 
         weightlist = []
         if 'гантел' in x:
-            weightlist.extend([x, choices.round_to_multiple(orm*0.71, 2), choices.round_to_multiple(orm*0.81, 2), choices.round_to_multiple(orm*0.91, 2)])
+            weightlist.extend([x, 
+                    choices.round_to_multiple(orm*0.71, 2), 
+                    choices.round_to_multiple(orm*0.81, 2), 
+                    choices.round_to_multiple(orm*0.91, 2)
+                                  ])
         else:
             weightlist.extend([x, round(orm*0.71), round(orm*0.81), round(orm*0.91)])
         proga = pd.concat([pd.DataFrame([weightlist], columns=['Упражнение', '1пх', '2пх', '3пх']), proga], ignore_index=True)
