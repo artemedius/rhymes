@@ -54,12 +54,13 @@ def programme():
 
     # Задаём вопрос пользователю, даём опции
     print('Для построения программы пожалуйста ответьте на пару вопросов:')
-
     legs_or_nah = [inquirer.List('mg1', message='1. Какую группу мышц Вы хотите тренировать? ', choices=list(db['Категория'].unique()))]
     legs = inquirer.prompt(legs_or_nah)
     if legs['mg1'] == 'Ноги':
         print('Ну вы зверюга...')
-        print('Ронни Коулмэна из себя возомнили?...')
+        print('Ронни Коулмэна из себя возомнили?')
+        print('Так и быть, сейчас мы уничтожим ваши курьи ножки')
+        print('')
         import legs
         legs.legs()
         quit()
@@ -87,6 +88,7 @@ def programme():
     ]
     params = inquirer.prompt(parameters)
     print(f"Вы выбрали группы мышц - {legs['mg1']} и {category['mg2']} с соотношением {params['ratio']} ")
+    print('')
     print(f"В тренировку войдёт {params['number']} упражнений:")
 
     list1 = list(db.loc[db['Категория'] == legs['mg1']]['Упражнение'])
@@ -121,6 +123,33 @@ def programme():
             weightlist.extend([x, round(orm*0.71), round(orm*0.81), round(orm*0.91)])
         proga = pd.concat([pd.DataFrame([weightlist], columns=['Упражнение', '1пх', '2пх', '3пх']), proga], ignore_index=True)
         proga = proga.sort_values(by=['1пх'], ascending=False)
+        proga_final = proga.set_index('Упражнение') 
     # proga.to_excel('proga.xlsx', index=False)
+    print('')
     print("Ваша программа на тренировку: ")
-    print(proga)
+    print(proga_final)
+
+def update():
+    import openpyxl
+    import pandas as pd
+    path = 'C:/Users/a.fedosov/OneDrive - Hyva Global/Desktop/dataset/proj/input/sample.xlsx'
+    sample = pd.read_excel(path)
+    records = pd.read_excel('db2.xlsx')
+    records.set_index('Упражнение', inplace=True)
+
+    def uniques(df):
+        return list(df['Упражнение'].unique())
+    targets = uniques(sample)
+
+    def get_record(x):
+        step2 = records.loc[x]['Вес']
+        return(step2)
+
+    dict = {}
+    for n in targets:
+        dict[n] = max(sample.loc[sample['Упражнение'] == n]['Вес'])
+        pb = get_record(n)
+        if pb < dict[n]:
+            print(f'{n} - {dict[n]} от {get_record(n)}')
+        else:
+            print(f'{n} - не побил ')

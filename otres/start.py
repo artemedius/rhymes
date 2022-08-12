@@ -11,4 +11,4 @@ if menu['menu'] == 'Сколько поднять на раз':
 elif menu['menu'] == 'Составить тренировку на группу мышц':
     choices.programme()
 elif menu['menu'] == 'Обновить рекорды':
-    pass # Finish this
+    choices.update()

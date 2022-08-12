@@ -3,6 +3,7 @@ def legs():
     import inquirer
     import re
     import random
+    import numpy as np
     db = pd.read_excel('db.xlsx')
     parameters = [inquirer.Text('number', message='2. Сколько упражнений?', validate= lambda _, x: re.match('[1-9]', x))]
     params = inquirer.prompt(parameters)
@@ -29,4 +30,8 @@ def legs():
             weightlist.extend([x, round(orm*0.71), round(orm*0.81), round(orm*0.91)])
         proga = pd.concat([pd.DataFrame([weightlist], columns=['Упражнение', '1пх', '2пх', '3пх']), proga], ignore_index=True)
         proga = proga.sort_values(by=['1пх'], ascending=False)
-    print(proga)
+        # proga = proga.set_index(pd.Series(np.arange(int(params['number']))))
+        proga_final = proga.set_index('Упражнение')
+    print('')
+    print("Ваша программа на тренировку: ")
+    print(proga_final)
